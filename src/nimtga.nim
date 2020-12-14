@@ -50,6 +50,9 @@ proc read*(data: Stream, size: int): Tga =
     dataSize = size - header.fieldsSize - (if header.colorMapType == 1: colorMapSize else: 0)
     imageDataStart = header.fieldsSize + header.idLength.int + colorMapSize
 
+  if header.xOrigin != 0 or header.yOrigin != 0:
+    raise newException(ValueError, "Values other than 0 for x,y origin are not supported")
+
   result.width = header.width.int
   result.height = header.height.int
   result.bpp = header.bits.int
