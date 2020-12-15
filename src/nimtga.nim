@@ -27,6 +27,11 @@ func toBytes(header: Header): seq[uint8] =
       result &= v.uint8
       result &= (v shr 8).uint8
 
+func idx*(tga: Tga, x, y: int): int =
+  if x < 0 or x >= tga.width or y < 0 or y >= tga.height:
+    raise newException(IndexDefect, "x or y out of bounds")
+  (tga.height - 1 - y) * tga.width + x
+
 proc read*(data: Stream, size: int): Tga =
   data.setPosition 0
   let
