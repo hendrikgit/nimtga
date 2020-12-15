@@ -15,6 +15,9 @@ type
   Pixel* = object
     red*, green*, blue*, alpha*: uint8
 
+func `$`*(tga: Tga): string =
+  "(width: " & $tga.width & ", height: " & $tga.height & ", bpp: " & $tga.bpp & ", pixels: " & $tga.pixels.len & ")"
+
 func fieldsSize(obj: object): int =
   for _, v in obj.fieldPairs:
     result += v.sizeof
