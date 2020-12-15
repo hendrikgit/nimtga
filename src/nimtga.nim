@@ -119,13 +119,13 @@ proc write*(tga: Tga, filename: string) =
       data &= pixel.alpha
   filename.writeFile data
 
-proc rotate90cw*(tga: var Tga) =
-  var rotated = newSeq[Pixel]()
+func rotate90cw*(tga: Tga): Tga =
+  result.width = tga.height
+  result.height = tga.width
+  result.bpp = tga.bpp
   for x in countdown(tga.width - 1, 0):
     for y in 0 ..< tga.height:
-      rotated &= tga.pixels[y * tga.width + x]
-  tga.pixels = rotated
-  swap(tga.width, tga.height)
+      result.pixels &= tga.pixels[y * tga.width + x]
 
 func concatR*(tga1, tga2: Tga): Tga =
   result.width = tga1.width + tga2.width
