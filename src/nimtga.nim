@@ -126,3 +126,17 @@ proc rotate90cw*(tga: var Tga) =
       rotated &= tga.pixels[y * tga.width + x]
   tga.pixels = rotated
   swap(tga.width, tga.height)
+
+func concatR*(tga1, tga2: Tga): Tga =
+  result.width = tga1.width + tga2.width
+  result.height = max(tga1.height, tga2.height)
+  result.bpp = max(tga1.bpp, tga2.bpp)
+  let whitePixel = Pixel(red: 255, green: 255, blue: 255, alpha: 255)
+  for y in 0 ..< result.height:
+    for tga in [tga1, tga2]:
+      if y < tga.height:
+        for p in tga.pixels[y * tga.width ..< (y + 1) * tga.width]:
+          result.pixels &= p
+      else:
+        for x in 0 ..< tga.width:
+          result.pixels &= whitePixel
