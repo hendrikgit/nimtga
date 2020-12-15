@@ -114,3 +114,11 @@ proc write*(tga: Tga, filename: string) =
     if pixelSize == 4:
       data &= pixel.alpha
   filename.writeFile data
+
+proc rotate90cw*(tga: var Tga) =
+  var rotated = newSeq[Pixel]()
+  for x in countdown(tga.width - 1, 0):
+    for y in 0 ..< tga.height:
+      rotated &= tga.pixels[y * tga.width + x]
+  tga.pixels = rotated
+  swap(tga.width, tga.height)
