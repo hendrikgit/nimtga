@@ -140,3 +140,15 @@ func concatR*(tga1, tga2: Tga): Tga =
       else:
         for x in 0 ..< tga.width:
           result.pixels &= whitePixel
+
+func concatB*(tga1, tga2: Tga): Tga =
+  result.width = max(tga1.width, tga2.width)
+  result.height = tga1.height + tga2.height
+  result.bpp = max(tga1.bpp, tga2.bpp)
+  let whitePixel = Pixel(red: 255, green: 255, blue: 255, alpha: 255)
+  for tga in [tga1, tga2]:
+    for y in 0 ..< tga.height:
+      for p in tga.pixels[y * tga.width ..< (y + 1) * tga.width]:
+        result.pixels &= p
+      for x in tga.width ..< result.width:
+        result.pixels &= whitePixel
