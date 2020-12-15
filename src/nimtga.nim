@@ -1,4 +1,4 @@
-import os, sequtils, streams
+import os, streams
 
 type
   Tga* = object
@@ -108,7 +108,8 @@ proc write*(tga: Tga, filename: string) =
       bits: tga.bpp.uint8
     )
   var data = newSeq[uint8]()
-  data.insert header.toBytes
+  for b in header.toBytes:
+    data &= b
   for idx, pixel in tga.pixels:
     # put bytes in order bgr(a)
     data &= pixel.blue
