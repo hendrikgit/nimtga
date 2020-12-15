@@ -32,6 +32,12 @@ func idx*(tga: Tga, x, y: int): int =
     raise newException(IndexDefect, "x or y out of bounds")
   (tga.height - 1 - y) * tga.width + x
 
+proc setPixelAt*(tga: var Tga, pixel: Pixel, idx: int) =
+  tga.pixels[idx] = pixel
+
+proc setPixelAt*(tga: var Tga, pixel: Pixel, x, y: int) =
+  tga.setPixelAt(pixel, tga.idx(x, y))
+
 proc read*(data: Stream, size: int): Tga =
   data.setPosition 0
   let
