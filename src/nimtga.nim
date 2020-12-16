@@ -41,7 +41,7 @@ proc setPixelAt*(tga: var Tga, pixel: Pixel, idx: int) =
 proc setPixelAt*(tga: var Tga, pixel: Pixel, x, y: int) =
   tga.setPixelAt(pixel, tga.idx(x, y))
 
-proc read*(data: Stream, size: int): Tga =
+proc readTga*(data: Stream, size: int): Tga =
   data.setPosition 0
   let
     header = Header(
@@ -90,9 +90,9 @@ proc read*(data: Stream, size: int): Tga =
   else:
     raise newException(ValueError, "Unsupported image type")
 
-proc read*(filename: string): Tga =
+proc readTgaFile*(filename: string): Tga =
   let stream = filename.openFileStream
-  result = read(stream, filename.getFileSize.int)
+  result = readTga(stream, filename.getFileSize.int)
   stream.close
 
 proc write*(tga: Tga, filename: string) =
