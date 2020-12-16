@@ -1,4 +1,4 @@
-import os, streams
+import colors, os, sequtils, streams
 
 type
   Tga* = object
@@ -14,6 +14,14 @@ type
   
   Pixel* = object
     red*, green*, blue*, alpha*: uint8
+
+func initTga*(width, height: int, color = colWhite, bpp = 24): Tga =
+  result.width = width
+  result.height = height
+  result.bpp = bpp
+  let rgb = color.extractRGB
+  let pixel = Pixel(red: rgb.r.uint8, green: rgb.g.uint8, blue: rgb.b.uint8, alpha: 255)
+  result.pixels = newSeqWith(width * height, pixel)
 
 func `$`*(tga: Tga): string =
   "(width: " & $tga.width & ", height: " & $tga.height & ", bpp: " & $tga.bpp & ", pixels: " & $tga.pixels.len & ")"
