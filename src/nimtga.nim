@@ -1,4 +1,4 @@
-import colors, os, sequtils, streams
+import colors, math, os, sequtils, streams
 
 type
   Tga* = object
@@ -140,13 +140,13 @@ func rotate90cw*(tga: Tga): Tga =
     for y in 0 ..< tga.height:
       result.pixels &= tga.pixels[y * tga.width + x]
 
-func concatR*(tga1, tga2: Tga): Tga =
-  result.width = tga1.width + tga2.width
-  result.height = max(tga1.height, tga2.height)
-  result.bpp = max(tga1.bpp, tga2.bpp)
+func concatR*(tga1: Tga, tgas: varargs[Tga]): Tga =
+  result.width = tga1.width + tgas.mapIt(it.width).sum
+  result.height = max(@[tga1.height] & tgas.mapIt(it.height))
+  result.bpp = max(@[tga1.bpp] & tgas.mapIt(it.bpp))
   let whitePixel = Pixel(red: 255, green: 255, blue: 255, alpha: 255)
   for y in 0 ..< result.height:
-    for tga in [tga1, tga2]:
+    for tga in @[tga1] & @tgas:
       if y < tga.height:
         for p in tga.pixels[y * tga.width ..< (y + 1) * tga.width]:
           result.pixels &= p
@@ -154,12 +154,12 @@ func concatR*(tga1, tga2: Tga): Tga =
         for x in 0 ..< tga.width:
           result.pixels &= whitePixel
 
-func concatB*(tga1, tga2: Tga): Tga =
-  result.width = max(tga1.width, tga2.width)
-  result.height = tga1.height + tga2.height
-  result.bpp = max(tga1.bpp, tga2.bpp)
+func concatB*(tga1: Tga, tgas: varargs[Tga]): Tga =
+  result.width = max(@[tga1.width] & tgas.mapIt(it.width))
+  result.height = tga1.height + tgas.mapIt(it.height).sum
+  result.bpp = max(@[tga1.bpp] & tgas.mapIt(it.bpp))
   let whitePixel = Pixel(red: 255, green: 255, blue: 255, alpha: 255)
-  for tga in [tga1, tga2]:
+  for tga in @[tga1] & @tgas:
     for y in 0 ..< tga.height:
       for p in tga.pixels[y * tga.width ..< (y + 1) * tga.width]:
         result.pixels &= p
