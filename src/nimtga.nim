@@ -15,7 +15,9 @@ type
   Pixel* = object
     red*, green*, blue*, alpha*: uint8
 
-func initTga*(width, height: int, color = colWhite, bpp = 24): Tga =
+func initTga*(width = 1, height = 1, color = colWhite, bpp = 24): Tga =
+  if width < 1 or height < 1:
+    raise newException(ValueError, "width or height < 1 are not supported. width: " & $width & ", height: " & $height)
   result.width = width
   result.height = height
   result.bpp = bpp
