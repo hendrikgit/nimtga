@@ -90,6 +90,11 @@ proc readTga*(data: Stream, size: int): Tga =
   else:
     raise newException(ValueError, "Unsupported image type")
 
+proc readTga*(data: string): Tga =
+  let stream = data.newStringStream
+  result = readTga(stream, data.len)
+  stream.close
+
 proc readTgaFile*(filename: string): Tga =
   let stream = filename.openFileStream
   result = readTga(stream, filename.getFileSize.int)
