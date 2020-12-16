@@ -83,18 +83,35 @@ proc readTga*(data: Stream, size: int): Tga =
 
   case header.imageType
   of 2: # uncompressed rgb/truecolor image
-    if header.bits == 24 or header.bits == 32:
-      let imageData = cast[seq[uint8]](data.readStr(dataSize))
-      for idx in countup(0, dataSize - pixelSize, step = pixelSize):
-        # pixel color bytes are in the order of bgr(a)
-        result.pixels &= Pixel(
-          red: imageData[idx + 2],
-          green: imageData[idx + 1],
-          blue: imageData[idx],
-          alpha: if pixelSize == 4: imageData[idx + 3] else: 255
-        )
-    else:
-      raise newException(ValueError, "Unsupported pixel depth: " & $header.bits)
+    if header.bits != 24 and header.bits != 32:
+      raise newException(ValueError, "Unsupported pixel depth for image type " & $header.imageType & ": " & $header.bits)
+    let imageData = cast[seq[uint8]](data.readStr(dataSize))
+    for idx in countup(0, dataSize - pixelSize, step = pixelSize):
+      # pixel color bytes are in the order of bgr(a)
+      result.pixels &= Pixel(
+        red: imageData[idx + 2],
+        green: imageData[idx + 1],
+        blue: imageData[idx],
+        alpha: if pixelSize == 4: imageData[idx + 3] else: 255
+      )
+  of 10: # run-length encoded rgb
+    if header.bits != 24:
+      raise newException(ValueError, "Unsupported pixel depth for image type " & $header.imageType & ": " & $header.bits)
+    # data contains header bytes with a count of how many pixels follow
+    # it starts with a header byte, following header positions depend on pixelCount and type of repetition
+    var idx = 0
+    while idx < header.width.int * header.height.int:
+      let header = data.readUint8
+      let pixelCount = (header and 0x7f).int + 1
+      idx += pixelCount
+      # color order is bgr
+      if (header and 0x80) != 0: # the same pixel is repeated pixelCount times
+        let pixel = Pixel(blue: data.readUint8, green: data.readUint8, red: data.readUint8, alpha: 255)
+        for _ in 0 ..< pixelCount:
+          result.pixels &= pixel
+      else: # different pixels (but without header, 3 bytes long) follow pixelCount times
+        for idxPixel in 0 ..< pixelCount:
+          result.pixels &= Pixel(blue: data.readUint8, green: data.readUint8, red: data.readUint8, alpha: 255)
   else:
     raise newException(ValueError, "Unsupported image type: " & $header.imageType)
 
