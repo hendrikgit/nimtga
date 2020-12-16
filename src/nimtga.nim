@@ -182,3 +182,22 @@ func concatB*(tga1: Tga, tgas: varargs[Tga]): Tga =
         result.pixels &= p
       for x in tga.width ..< result.width:
         result.pixels &= whitePixel
+
+func scale(tga: Tga, ratioX, ratioY: float): Tga =
+  result.width = (tga.width.toFloat * ratioX).toInt
+  result.height = (tga.height.toFloat * ratioY).toInt
+  result.bpp = tga.bpp
+  result.pixels.setLen(result.width * result.height)
+  let scaleRatioX = 1 / ratioX
+  let scaleRatioY = 1 / ratioY
+  for y in 0 ..< result.height:
+    for x in 0 ..< result.width:
+      let px = (x.toFloat * scaleRatioX).floor
+      let py = (y.toFloat * scaleRatioY).floor
+      result.pixels[y * result.width + x] = tga.pixels[(py * tga.width.toFloat + px).toInt]
+
+func scale*(tga: Tga, ratio: float): Tga =
+  tga.scale(ratio, ratio)
+
+proc scale*(tga: Tga, width, height: int): Tga =
+  tga.scale(width / tga.width, height / tga.height)
