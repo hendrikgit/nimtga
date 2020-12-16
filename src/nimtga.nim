@@ -94,9 +94,9 @@ proc readTga*(data: Stream, size: int): Tga =
           alpha: if pixelSize == 4: imageData[idx + 3] else: 255
         )
     else:
-      raise newException(ValueError, "Unsupported pixel depth")
+      raise newException(ValueError, "Unsupported pixel depth: " & $header.bits)
   else:
-    raise newException(ValueError, "Unsupported image type")
+    raise newException(ValueError, "Unsupported image type: " & $header.imageType)
 
 proc readTga*(data: string): Tga =
   let stream = data.newStringStream
@@ -111,7 +111,7 @@ proc readTgaFile*(filename: string): Tga =
 proc write*(tga: Tga, filename: string) =
   # only writes type 2 images with 24 or 32 bpp
   if tga.bpp != 24 and tga.bpp != 32:
-    raise newException(ValueError, "Unsupported pixel depth")
+    raise newException(ValueError, "Unsupported pixel depth: " & $tga.bpp)
   let
     pixelSize = tga.bpp div 8
     header = Header(
