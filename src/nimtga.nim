@@ -74,8 +74,14 @@ proc readTga*(data: Stream, size: int): Tga =
     dataSize = size - header.fieldsSize - (if header.colorMapType == 1: colorMapSize else: 0)
     imageDataStart = header.fieldsSize + header.idLength.int + colorMapSize
 
+  if header.colorMapType != 0:
+    raise newException(ValueError, "Color map type not supported: " & $header.colorMapType)
+
   if header.xOrigin != 0 or header.yOrigin != 0:
     raise newException(ValueError, "Values other than 0 for x,y origin are not supported")
+
+  if header.bits != 24 and header.bits != 32:
+    raise newException(ValueError, "Unsupported pixel depth: " & $header.bits)
 
   result.width = header.width.int
   result.height = header.height.int
@@ -85,8 +91,6 @@ proc readTga*(data: Stream, size: int): Tga =
 
   case header.imageType
   of 2: # uncompressed rgb/truecolor image
-    if header.bits != 24 and header.bits != 32:
-      raise newException(ValueError, "Unsupported pixel depth for image type " & $header.imageType & ": " & $header.bits)
     let imageData = cast[seq[uint8]](data.readStr(dataSize))
     for idx in countup(0, dataSize - pixelSize, step = pixelSize):
       # pixel color bytes are in the order of bgr(a)
@@ -97,8 +101,6 @@ proc readTga*(data: Stream, size: int): Tga =
         alpha: if pixelSize == 4: imageData[idx + 3] else: 255
       )
   of 10: # run-length encoded rgb
-    if header.bits != 24:
-      raise newException(ValueError, "Unsupported pixel depth for image type " & $header.imageType & ": " & $header.bits)
     # data contains header bytes with a count of how many pixels follow
     # it starts with a header byte, following header positions depend on pixelCount and type of repetition
     var idx = 0
@@ -106,14 +108,14 @@ proc readTga*(data: Stream, size: int): Tga =
       let header = data.readUint8
       let pixelCount = (header and 0x7f).int + 1
       idx += pixelCount
-      # color order is bgr
+      # pixel color bytes are in the order of bgr(a)
       if (header and 0x80) != 0: # the same pixel is repeated pixelCount times
-        let pixel = Pixel(blue: data.readUint8, green: data.readUint8, red: data.readUint8, alpha: 255)
+        let pixel = Pixel(blue: data.readUint8, green: data.readUint8, red: data.readUint8, alpha: if pixelSize == 4: data.readUint8 else: 255)
         for _ in 0 ..< pixelCount:
           result.pixels &= pixel
-      else: # different pixels (but without header, 3 bytes long) follow pixelCount times
+      else: # different pixels (but without header, pixelSize bytes long) follow pixelCount times
         for idxPixel in 0 ..< pixelCount:
-          result.pixels &= Pixel(blue: data.readUint8, green: data.readUint8, red: data.readUint8, alpha: 255)
+          result.pixels &= Pixel(blue: data.readUint8, green: data.readUint8, red: data.readUint8, alpha: if pixelSize == 4: data.readUint8 else: 255)
   else:
     raise newException(ValueError, "Unsupported image type: " & $header.imageType)
 
